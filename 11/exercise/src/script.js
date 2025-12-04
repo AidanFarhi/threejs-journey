@@ -1,5 +1,12 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import GUI from 'lil-gui'
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
+
+/**
+ * Debug
+ */
+const gui = new GUI()
 
 /**
  * Base
@@ -22,11 +29,32 @@ const doorHeightTexture = textureLoader.load('./textures/door/height.jpg')
 const doorNormalTexture = textureLoader.load('./textures/door/normal.jpg')
 const doorMetalnessTexture = textureLoader.load('./textures/door/metalness.jpg')
 const doorRoughnessTexture = textureLoader.load('./textures/door/roughness.jpg')
-const matcapTexture = textureLoader.load('./textures/matcaps/1.png')
+const matcapTexture = textureLoader.load('./textures/matcaps/3.png')
 const gradientTexture = textureLoader.load('./textures/gradients/3.jpg')
 
 doorColorTexture.colorSpace = THREE.SRGBColorSpace
 matcapTexture.colorSpace = THREE.SRGBColorSpace
+
+/**
+ * Lights
+ */
+// const ambientLight = new THREE.AmbientLight('white', 0.1)
+// const pointLight = new THREE.PointLight('white', 30)
+// pointLight.position.x = 2
+// pointLight.position.y = 3
+// pointLight.position.z = 4
+
+// scene.add(ambientLight, pointLight)
+
+/**
+ * Environment Map
+ */
+const rgbeLoader = new RGBELoader()
+rgbeLoader.load('./textures/environmentMap/2k.hdr', environmentMap => {
+    environmentMap.mapping = THREE.EquirectangularReflectionMapping
+    scene.background = environmentMap
+    scene.environment = environmentMap
+})
 
 /**
  * Sizes
@@ -71,7 +99,34 @@ window.addEventListener('resize', () =>
 // material.flatShading = true
 
 // MeshMatcapMaterial
-const material = new THREE.MeshMatcapMaterial()
+// const material = new THREE.MeshMatcapMaterial()
+// material.matcap = matcapTexture
+
+// MeshDepthMaterial
+// const material = new THREE.MeshDepthMaterial()
+
+// MeshLambertMaterial
+// const material = new THREE.MeshLambertMaterial()
+
+// MeshPhongMaterial
+// const material = new THREE.MeshPhongMaterial()
+// material.shininess = 100
+// material.specular = new THREE.Color(0x1188ff)
+
+// MeshToonMaterial
+// const material = new THREE.MeshToonMaterial()
+// gradientTexture.minFilter = THREE.NearestFilter
+// gradientTexture.magFilter = THREE.NearestFilter
+// gradientTexture.generateMipmaps = false
+// material.gradientMap = gradientTexture
+
+// MeshStandardMaterial
+const material = new THREE.MeshStandardMaterial()
+material.metalness = 0.7
+material.roughness = 0.2
+
+gui.add(material, 'metalness').min(0).max(1).step(0.0001)
+gui.add(material, 'roughness').min(0).max(1).step(0.0001)
 
 const sphere = new THREE.Mesh(
     new THREE.SphereGeometry(0.5, 16, 16), 
