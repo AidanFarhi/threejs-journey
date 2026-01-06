@@ -3,6 +3,16 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import GUI from 'lil-gui'
 
 /**
+ * Textures
+ */
+const textureLoader = new THREE.TextureLoader()
+const bakedShadow = textureLoader.load('/textures/bakedShadow.jpg')
+bakedShadow.colorSpace = THREE.SRGBColorSpace
+
+const simpleShadow = textureLoader.load('/textures/simpleShadow.jpg')
+
+
+/**
  * Base
  */
 // Debug
@@ -73,6 +83,18 @@ scene.add(spotLightCameraHelper)
 const pointLight = new THREE.PointLight(0xffffff, 2.7)
 
 pointLight.castShadow = true
+pointLight.shadow.mapSize.width = 1024
+pointLight.shadow.mapSize.height = 1024
+pointLight.shadow.camera.near = 0.1
+pointLight.shadow.camera.far = 5
+
+pointLight.position.set(-1, 1, 0)
+
+scene.add(pointLight)
+
+const pointLightCameraHelper = new THREE.CameraHelper(pointLight.shadow.camera)
+pointLightCameraHelper.visible = false
+scene.add(pointLightCameraHelper)
 
 /**
  * Materials
@@ -99,7 +121,18 @@ plane.rotation.x = - Math.PI * 0.5
 plane.position.y = - 0.5
 plane.receiveShadow = true
 
-scene.add(sphere, plane)
+const sphereShadow = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.5, 1.5),
+    new THREE.MeshBasicMaterial({
+        color: 0x000000,
+        transparent: true,
+        alphaMap: simpleShadow
+    })
+)
+sphereShadow.rotation.x = -Math.PI * 0.5
+sphereShadow.position.y = plane.position.y + 0.01
+
+scene.add(sphere, plane, sphereShadow)
 
 /**
  * Sizes
@@ -148,17 +181,31 @@ renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
 // Enable the shadow map
-renderer.shadowMap.enabled = true
+renderer.shadowMap.enabled = false
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
 /**
  * Animate
  */
 
+const clock = new THREE.Clock()
+
 const tick = () =>
 {
+    const elapsedTime = clock.getElapsedTime()
+
     // Update controls
     controls.update()
+
+    // Update the sphere
+    sphere.position.x = Math.cos(elapsedTime) * 1.5
+    sphere.position.z = Math.sin(elapsedTime) * 1.5
+    sphere.position.y = Math.abs(Math.sin(elapsedTime * 3))
+
+    // Update the sphere shadow
+    sphereShadow.position.x = sphere.position.x
+    sphereShadow.position.z = sphere.position.z
+    sphereShadow.material.opacity = (1 - sphere.position.y) * 0.3
 
     // Render
     renderer.render(scene, camera)
